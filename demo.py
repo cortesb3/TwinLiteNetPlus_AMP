@@ -17,7 +17,6 @@ import os
 import shutil
 
 
-
 def show_seg_result(img, result, index, epoch, save_dir=None, is_ll=False,palette=None):
     # img = mmcv.imread(img)
     # img = img.copy()
@@ -34,13 +33,12 @@ def show_seg_result(img, result, index, epoch, save_dir=None, is_ll=False,palett
     assert len(palette.shape) == 2
     
 
-    color_area = np.zeros((result[0].shape[0], result[0].shape[1], 3), dtype=np.uint8)
+    color_area = np.zeros((result.shape[0], result.shape[1], 3), dtype=np.uint8)
     
     # for label, color in enumerate(palette):
-    #     color_area[result[0] == label, :] = color
+    #     color_area[result == label, :] = color
 
-    color_area[result[0] == 1] = [0, 255, 0]
-    color_area[result[1] ==1] = [255, 0, 0]
+    color_area[result == 1] = [0, 255, 0]  # Only drivable area in green
     color_seg = color_area
 
     # convert to BGR
@@ -111,14 +109,9 @@ def detect(args):
         da_seg_mask = da_seg_mask.int().squeeze().cpu().numpy()
         # da_seg_mask = morphological_process(da_seg_mask, kernel_size=7)
         
-        ll_predict = ll_seg_out[:, :,pad_h:(height-pad_h),pad_w:(width-pad_w)]
-        ll_seg_mask = torch.nn.functional.interpolate(ll_predict, scale_factor=int(1/ratio), mode='bilinear')
-        _, ll_seg_mask = torch.max(ll_seg_mask, 1)
-        ll_seg_mask = ll_seg_mask.int().squeeze().cpu().numpy()
-        # Lane line post-processing
+        # Only process drivable area segmentation (removed lane line processing)
 
-
-        img_vis = show_seg_result(img_det, (da_seg_mask, ll_seg_mask), _, _)
+        img_vis = show_seg_result(img_det, da_seg_mask, _, _)
 
         
         if dataset.mode == 'images':
