@@ -40,7 +40,7 @@ class AMPDataset(Dataset):
         if img is None:
             raise ValueError(f"Could not load image: {img_path}")
             
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        # Keep as BGR for consistency with BDD100K processing
         h, w, _ = img.shape
         
         # Load Label and Create Mask
@@ -64,17 +64,41 @@ class AMPDataset(Dataset):
                     # Draw the polygon on the mask
                     cv2.fillPoly(mask, [coords.astype(np.int32)], 1)
 
-        # Resize both to model input size
-        img = cv2.resize(img, self.img_size)
-        mask = cv2.resize(mask, self.img_size, interpolation=cv2.INTER_NEAREST)
+        # Apply letterbox like BDD100K (to 384x640)
+        W_ = 640
+        H_ = 384
+        
+        from BDD100K import letterbox
+        img = letterbox(img, (H_, W_))
+        
+        # Resize mask
+        mask = cv2.resize(mask, (W_, 360))
+        
+        # Create binary masks exactly like BDD100K
+        _, seg_b1 = cv2.threshold(mask, 1, 255, cv2.THRESH_BINARY_INV)
+        _, seg1 = cv2.threshold(mask, 1, 255, cv2.THRESH_BINARY)
+        
+        # Create dummy lane line mask (all zeros)
+        lane_mask = np.zeros_like(mask)
+        _, seg_b2 = cv2.threshold(lane_mask, 1, 255, cv2.THRESH_BINARY_INV)
+        _, seg2 = cv2.threshold(lane_mask, 1, 255, cv2.THRESH_BINARY)
+        
+        # Convert to tensors like BDD100K
+        from torchvision import transforms
+        Tensor = transforms.ToTensor()
+        
+        seg1 = Tensor(seg1)
+        seg2 = Tensor(seg2)
+        seg_b1 = Tensor(seg_b1)
+        seg_b2 = Tensor(seg_b2)
+        
+        seg_da = torch.stack((seg_b1[0], seg1[0]), 0)  # Drivable area
+        seg_ll = torch.stack((seg_b2[0], seg2[0]), 0)  # Lane lines (dummy)
+        
+        # Process image exactly like BDD100K
+        img = np.array(img)
+        img = img[:, :, ::-1].transpose(2, 0, 1)  # BGR to RGB and HWC to CHW
+        img = np.ascontiguousarray(img)
 
-        # Apply transforms if provided
-        if self.transform and not self.valid:
-            # Apply transforms here if needed
-            pass
-
-        # Convert to Tensors
-        img = torch.from_numpy(img).permute(2, 0, 1).float() / 255.0
-        mask = torch.from_numpy(mask).long()
-
-        return img_path, img, mask
+        # Return format: (image_name, image_tensor, (drivable_mask, lane_mask))
+        return img_path, torch.from_numpy(img), (seg_da, seg_ll)

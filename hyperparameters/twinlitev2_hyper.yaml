@@ -8,6 +8,11 @@ gamma3: 2.0 #seg_focal gamma
 weight_decay: 0.0005  # optimizer weight decay 
 momentum: 0.9  #AdamW optimizer for  beta1
 eps: 0.00000001 #eps
+
+# Dataset paths for AMP dataset
+dataset_path: '/scratch/gilbreth/cortesb/amp/amp_dataset/train'  # Path to training dataset
+val_dataset_path: '/scratch/gilbreth/cortesb/amp/amp_dataset/val'  # Path to validation dataset
+
 ######################Augmentation
 degrees: 10 #Rotation
 translate: 0.1 #Translate

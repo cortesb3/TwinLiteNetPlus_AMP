@@ -10,7 +10,7 @@ from argparse import ArgumentParser
 from model.model import TwinLiteNetPlus
 from loss import TotalLoss
 from utils import train, val, netParams, save_checkpoint, poly_lr_scheduler
-import BDD100K
+from AMP import AMPDataset
 
 class ModelEMA:
     """Exponential Moving Average (EMA) for model parameters"""
@@ -45,11 +45,11 @@ def train_net(args, hyp):
     os.makedirs(args.savedir, exist_ok=True)  # Ensure save directory exists
     
     trainLoader = torch.utils.data.DataLoader(
-        BDD100K.Dataset(hyp, valid=False),
+        AMPDataset(root=hyp['dataset_path'], img_size=(640, 360), valid=False),
         batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=True)
     
     valLoader = torch.utils.data.DataLoader(
-        BDD100K.Dataset(hyp, valid=True),
+        AMPDataset(root=hyp['val_dataset_path'], img_size=(640, 360), valid=True),
         batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers, pin_memory=True)
     
     if cuda_available:
