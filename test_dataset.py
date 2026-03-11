@@ -6,18 +6,21 @@ Run this on Gilbreth to validate your data loading
 
 import torch
 import numpy as np
+import yaml
 from AMP import AMPDataset
 
 def test_dataset():
     print("Testing AMP Dataset...")
     
-    # Test paths - update these to match your actual paths on Gilbreth
-    train_path = "/scratch/gilbreth/cortesb/amp/amp_dataset/train"
+    # Load hyperparameters
+    hyp_path = "./hyperparameters/twinlitev2_hyper.yaml"
+    with open(hyp_path, 'r') as f:
+        hyp = yaml.safe_load(f)
     
     try:
         # Test dataset creation
-        print(f"Testing dataset path: {train_path}")
-        ds = AMPDataset(root=train_path, valid=False)
+        print(f"Testing dataset path: {hyp['dataset_path']}")
+        ds = AMPDataset(hyp, valid=False)
         print(f"Dataset loaded successfully! Found {len(ds)} samples")
         
         if len(ds) == 0:
@@ -46,7 +49,7 @@ def test_dataset():
         if torch.sum(seg_da[1]) > 0:  # seg_da[1] is the positive mask
             print(f"✅ Drivable area mask contains data: {torch.sum(seg_da[1])} positive pixels")
         else:
-            print("⚠️  WARNING: Drivable area mask is empty - check your label files!")
+            print("⚠️  WARNING: Drivable area mask is empty - check your mask files!")
             
         # Test multiple samples
         print("Testing multiple samples...")

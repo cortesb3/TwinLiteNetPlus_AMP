@@ -45,11 +45,11 @@ def train_net(args, hyp):
     os.makedirs(args.savedir, exist_ok=True)  # Ensure save directory exists
     
     trainLoader = torch.utils.data.DataLoader(
-        AMPDataset(root=hyp['dataset_path'], img_size=(640, 360), valid=False),
+        AMPDataset(hyp, valid=False),
         batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=True)
     
     valLoader = torch.utils.data.DataLoader(
-        AMPDataset(root=hyp['val_dataset_path'], img_size=(640, 360), valid=True),
+        AMPDataset(hyp, valid=True),
         batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers, pin_memory=True)
     
     if cuda_available:

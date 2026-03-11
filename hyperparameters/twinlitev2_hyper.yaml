@@ -10,8 +10,8 @@ momentum: 0.9  #AdamW optimizer for  beta1
 eps: 0.00000001 #eps
 
 # Dataset paths for AMP dataset
-dataset_path: '/scratch/gilbreth/cortesb/amp/amp_dataset/train'  # Path to training dataset
-val_dataset_path: '/scratch/gilbreth/cortesb/amp/amp_dataset/val'  # Path to validation dataset
+dataset_path: '/scratch/gilbreth/cortesb/amp/amp_dataset'  # Path to training dataset root
+val_dataset_path: '/scratch/gilbreth/cortesb/amp/amp_dataset'  # Path to validation dataset root
 
 ######################Augmentation
 degrees: 10 #Rotation
