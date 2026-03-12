@@ -10,15 +10,13 @@
 #SBATCH --error=%x_%j.err
 
 # 1. Load the specific Gilbreth Conda module
-module purge
-module load anaconda
+module load cuda anaconda
 
 # 2. Activate your conda environment
-# (Using 'source activate' is often safer inside Slurm batch scripts than 'conda activate')
-source activate /scratch/gilbreth/cortesb/amp/twinlite_env
+conda activate /scratch/gilbreth/cortesb/amp/twinlite_env 
 
 # 3. Navigate to your repository
-cd /scratch/gilbreth/cortesb/amp/TwinLiteNetPlus_AMP
+cd ~/scratch/gilbreth/cortesb/amp/TwinLiteNetPlus_AMP
 
 # 4. Run validation script
 echo "Starting Evaluation on Val Set..."
