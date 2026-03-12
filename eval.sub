@@ -1,0 +1,47 @@
+#!/usr/bin/bash
+#SBATCH --job-name=amp_eval
+#SBATCH --cpus-per-task=8
+#SBATCH --account=labi
+#SBATCH --partition=a10
+#SBATCH --time=01:00:00
+#SBATCH --gres=gpu:1
+#SBATCH --mem=16G
+#SBATCH --output=%x_%j.out
+#SBATCH --error=%x_%j.err
+
+# 1. Load modules - try different approaches
+module purge
+
+# Try these module loading options (uncomment one that works):
+# Option 1: Try python module directly
+module load python
+
+# Option 2: If conda/anaconda has different name, try:
+# module load conda
+# module load miniconda
+# module load Anaconda3
+
+# Option 3: If using your own conda installation:
+# source ~/.bashrc
+# source ~/miniconda3/etc/profile.d/conda.sh
+
+# 2. Activate your conda environment
+conda activate /scratch/gilbreth/cortesb/amp/twinlite_env
+
+# 3. Navigate to your repository
+cd /scratch/gilbreth/cortesb/amp/TwinLiteNetPlus_AMP
+
+# 4. Check if files exist
+echo "Checking files..."
+ls -la val_amp.py
+ls -la pretrained/
+
+# 5. Run validation script (FIXED: correct filename)
+echo "Starting Evaluation on Val Set..."
+python val_amp.py --weight pretrained/large.pth --config large
+
+# 6. Also test on train set for comparison
+echo "Starting Evaluation on Train Set..."
+python val_amp.py --weight pretrained/large.pth --config large --test_on_train
+
+echo "Evaluation completed!"
