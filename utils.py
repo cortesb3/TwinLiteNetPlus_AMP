@@ -108,7 +108,7 @@ def val(val_loader = None, model = None, half = False, args=None):
 
     total_batches = len(val_loader)
     pbar = enumerate(val_loader)
-    if args.verbose:
+    if getattr(args, 'verbose', False):
         pbar = tqdm(pbar, total=total_batches)
     for i, (_,input, target) in pbar:
         input = input.cuda().half() / 255.0 if half else input.cuda().float() / 255.0
@@ -180,7 +180,7 @@ def val_one(val_loader = None, model = None, half = False, args=None):
 
     total_batches = len(val_loader)
     pbar = enumerate(val_loader)
-    if args.verbose:
+    if getattr(args, 'verbose', False):
         pbar = tqdm(pbar, total=total_batches)
     for i, (_,input, target) in pbar:
         input = input.cuda().half() / 255.0 if half else input.cuda().float() / 255.0

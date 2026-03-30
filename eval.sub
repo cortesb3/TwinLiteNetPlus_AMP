@@ -16,14 +16,14 @@ module load cuda anaconda
 conda activate /scratch/gilbreth/cortesb/amp/twinlite_env 
 
 # 3. Navigate to your repository
-cd ~/scratch/gilbreth/cortesb/amp/TwinLiteNetPlus_AMP
+cd /scratch/gilbreth/cortesb/amp/TwinLiteNetPlus_AMP
 
 # 4. Run validation script
 echo "Starting Evaluation on Val Set..."
-python val_amp.py --weight pretrained/large.pth --config large
+python val_amp.py --weight pretrained/large.pth --config large --split val
 
-# 5. Also test on train set for comparison
-echo "Starting Evaluation on Train Set..."
-python val_amp.py --weight pretrained/large.pth --config large --test_on_train
+# 5. Also test on test set for comparison
+echo "Starting Evaluation on Test Set..."
+python val_amp.py --weight pretrained/large.pth --config large --split test
 
 echo "Evaluation completed!"
