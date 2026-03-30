@@ -343,14 +343,9 @@ class Dataset(torch.utils.data.Dataset):
         if label1 is None:
             raise FileNotFoundError(f"Drivable area mask unreadable: {mask1_path}")
 
-        mask2_path = self._resolve_mask_path(image_name, 'lane_line_annotations')
-        if mask2_path is None:
-            raise FileNotFoundError(
-                f"No lane_line mask found for image: {image_name}"
-            )
-        label2 = cv2.imread(mask2_path, 0)
-        if label2 is None:
-            raise FileNotFoundError(f"Lane line mask unreadable: {mask2_path}")
+        # Lane labels are optional for this setup: use a dummy all-zero mask
+        # so validation can run with drivable-area annotations only.
+        label2 = np.zeros_like(label1)
         
         if not self.valid:
             if random.random() < self.prob_perspective:

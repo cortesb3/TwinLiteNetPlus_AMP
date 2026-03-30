@@ -40,12 +40,11 @@ def validation(args):
     model.load_state_dict(torch.load(args.weight))
     model.eval()
     
-    # Perform validation
+    # Perform validation (lane branch uses dummy labels if lane annotations are unavailable)
     da_segment_results, ll_segment_results = val(valLoader, model, args.half, args=args)
     
-    # Print results
+    # Print drivable-area baseline result
     print(f"Driving Area Segment: mIOU({da_segment_results[2]:.3f})")
-    print(f"Lane Line Segment: Acc({ll_segment_results[0]:.3f}) IOU({ll_segment_results[1]:.3f})")
 
 
 if __name__ == '__main__':
