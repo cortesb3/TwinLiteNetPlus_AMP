@@ -18,7 +18,10 @@ module load cuda anaconda
 export NO_ALBUMENTATIONS_UPDATE=1
 
 # 2. Activate your conda environment
-conda activate /scratch/gilbreth/cortesb/amp/twinlite_env 
+# Conda deactivate hooks can reference unset vars; temporarily disable nounset.
+set +u
+conda activate /scratch/gilbreth/cortesb/amp/twinlite_env
+set -u
 
 # 3. Navigate to your repository
 cd /scratch/gilbreth/cortesb/amp/TwinLiteNetPlus_AMP
