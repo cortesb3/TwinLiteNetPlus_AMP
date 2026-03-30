@@ -58,7 +58,7 @@ class AMPDataset(torch.utils.data.Dataset):
         """
         image_path = Path(image_name)
         split = image_path.parent.name  # train / val / test
-        mask_dir = image_path.parents[2] / 'drivable_area_annotations' / split
+        mask_dir = image_path.parents[2] / 'drivable_are_annotations' / split
 
         # Primary candidate: same stem with .png
         candidates = [
@@ -107,7 +107,7 @@ class AMPDataset(torch.utils.data.Dataset):
         mask_path = self._resolve_mask_path(image_name)
         if mask_path is None:
             raise FileNotFoundError(
-                f"No mask found for image: {image_name}. Expected under drivable_area_annotations/{Path(image_name).parent.name}"
+                f"No mask found for image: {image_name}. Expected under drivable_are_annotations/{Path(image_name).parent.name}"
             )
 
         label1 = cv2.imread(mask_path, 0)
