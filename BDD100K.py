@@ -6,6 +6,8 @@ import numpy as np
 import os
 import random
 import math
+import glob
+from pathlib import Path
 from PIL import Image
 from skimage.filters import gaussian
 from skimage.restoration import denoise_bilateral
@@ -276,6 +278,44 @@ class Dataset(torch.utils.data.Dataset):
             self.root='../bdd100k/images/train'
             self.names=os.listdir(self.root)
 
+    def _resolve_mask_path(self, image_name, annotation_type='drivable_are_annotations'):
+        """
+        Resolve corresponding mask path for a given image.
+        Supports common export naming variants (same stem, no .rf hash stem, and mixed extensions).
+        :param image_name: Full path to image
+        :param annotation_type: Folder name (e.g., 'drivable_are_annotations' or 'lane_line_annotations')
+        """
+        image_path = Path(image_name)
+        split = image_path.parent.name  # train / val
+        mask_dir = image_path.parents[2] / annotation_type / split
+
+        # Primary candidate: same stem with .png
+        candidates = [
+            mask_dir / f"{image_path.stem}.png",
+            mask_dir / f"{image_path.stem}.jpg",
+            mask_dir / f"{image_path.stem}.jpeg",
+        ]
+
+        # If filename has Roboflow hash segment, try without it.
+        if '.rf.' in image_path.stem:
+            stem_no_hash = image_path.stem.split('.rf.')[0]
+            candidates.extend([
+                mask_dir / f"{stem_no_hash}.png",
+                mask_dir / f"{stem_no_hash}.jpg",
+                mask_dir / f"{stem_no_hash}.jpeg",
+            ])
+
+            # Fallback glob: any hashed version with same prefix
+            glob_hits = sorted(glob.glob(str(mask_dir / f"{stem_no_hash}.rf.*.png")))
+            if glob_hits:
+                return glob_hits[0]
+
+        for p in candidates:
+            if p.exists():
+                return str(p)
+
+        return None
+
     def __len__(self):
         return len(self.names)
 
@@ -290,9 +330,27 @@ class Dataset(torch.utils.data.Dataset):
         image_name=os.path.join(self.root,self.names[idx])
 
         image = cv2.imread(image_name)
+        if image is None:
+            raise FileNotFoundError(f"Image not found or unreadable: {image_name}")
         
-        label1 = cv2.imread(image_name.replace("images","drivable_area_annotations").replace("jpg","png"), 0)
-        label2 = cv2.imread(image_name.replace("images","lane_line_annotations").replace("jpg","png"), 0)
+        # Resolve mask paths using robust method
+        mask1_path = self._resolve_mask_path(image_name, 'drivable_are_annotations')
+        if mask1_path is None:
+            raise FileNotFoundError(
+                f"No drivable_are mask found for image: {image_name}"
+            )
+        label1 = cv2.imread(mask1_path, 0)
+        if label1 is None:
+            raise FileNotFoundError(f"Drivable area mask unreadable: {mask1_path}")
+
+        mask2_path = self._resolve_mask_path(image_name, 'lane_line_annotations')
+        if mask2_path is None:
+            raise FileNotFoundError(
+                f"No lane_line mask found for image: {image_name}"
+            )
+        label2 = cv2.imread(mask2_path, 0)
+        if label2 is None:
+            raise FileNotFoundError(f"Lane line mask unreadable: {mask2_path}")
         
         if not self.valid:
             if random.random() < self.prob_perspective:

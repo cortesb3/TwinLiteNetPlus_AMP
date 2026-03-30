@@ -1,0 +1,33 @@
+#!/usr/bin/bash
+#SBATCH --job-name=bdd100k_eval
+#SBATCH --cpus-per-task=8
+#SBATCH --account=labi
+#SBATCH --partition=a10
+#SBATCH --time=01:00:00
+#SBATCH --gres=gpu:1
+#SBATCH --mem=16G
+#SBATCH --output=%x_%j.out
+#SBATCH --error=%x_%j.err
+
+set -euo pipefail
+
+# 1. Load the specific Gilbreth Conda module
+module load cuda anaconda
+
+# Optional: suppress albumentations update check in batch logs
+export NO_ALBUMENTATIONS_UPDATE=1
+
+# 2. Activate your conda environment
+# Conda deactivate hooks can reference unset vars; temporarily disable nounset.
+set +u
+conda activate /scratch/gilbreth/cortesb/amp/twinlite_env
+set -u
+
+# 3. Navigate to your repository
+cd /scratch/gilbreth/cortesb/amp/TwinLiteNetPlus_AMP
+
+# 4. Run BDD100K validation script
+echo "Starting BDD100K Validation..."
+python val.py --weight pretrained/large.pth --config large
+
+echo "BDD100K evaluation completed!"
