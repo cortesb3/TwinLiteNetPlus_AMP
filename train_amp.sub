@@ -1,0 +1,37 @@
+#!/usr/bin/bash
+#SBATCH --job-name=amp_train
+#SBATCH --cpus-per-task=8
+#SBATCH --account=labi
+#SBATCH --partition=a10
+#SBATCH --time=24:00:00
+#SBATCH --gres=gpu:1
+#SBATCH --mem=32G
+#SBATCH --output=%x_%j.out
+#SBATCH --error=%x_%j.err
+
+set -euo pipefail
+
+# 1) Load modules
+module load cuda anaconda
+
+# Optional: quiet albumentations update warning
+export NO_ALBUMENTATIONS_UPDATE=1
+
+# 2) Activate environment
+set +u
+conda activate /scratch/gilbreth/cortesb/amp/twinlite_env
+set -u
+
+# 3) Move to repo
+cd /scratch/gilbreth/cortesb/amp/TwinLiteNetPlus_AMP
+
+# 4) Train on AMP dataset train split (val split used for validation)
+python train.py \
+  --config large \
+  --max_epochs 100 \
+  --batch_size 16 \
+  --num_workers 8 \
+  --hyp ./hyperparameters/twinlitev2_hyper.yaml \
+  --savedir /scratch/gilbreth/cortesb/amp/TwinLiteNetPlus_AMP/runs/amp_train_large \
+  --ema \
+  --verbose
