@@ -9,8 +9,13 @@
 #SBATCH --output=%x_%j.out
 #SBATCH --error=%x_%j.err
 
+set -euo pipefail
+
 # 1. Load the specific Gilbreth Conda module
 module load cuda anaconda
+
+# Optional: suppress albumentations update check in batch logs
+export NO_ALBUMENTATIONS_UPDATE=1
 
 # 2. Activate your conda environment
 conda activate /scratch/gilbreth/cortesb/amp/twinlite_env 
