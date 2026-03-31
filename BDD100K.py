@@ -158,7 +158,9 @@ class DatasetOneTask(torch.utils.data.Dataset):
         self.hgain = hyp["hgain"]
         self.sgain = hyp["sgain"]
         self.vgain = hyp["vgain"]
-        self.Random_Crop = A.RandomCrop(width=hyp["width_crop"], height=hyp["height_crop"])
+        self.crop_w = hyp["width_crop"]
+        self.crop_h = hyp["height_crop"]
+        self.Random_Crop = A.RandomCrop(width=self.crop_w, height=self.crop_h)
 
         self.prob_perspective = hyp["prob_perspective"]
         self.prob_flip = hyp["prob_flip"]
@@ -217,7 +219,7 @@ class DatasetOneTask(torch.utils.data.Dataset):
                 image = RandomBilateralBlur(image)
             if random.random() < self.prob_gaussian:
                 image = RandomGaussianBlur(image)
-            if random.random() < self.prob_crop:
+            if random.random() < self.prob_crop and image.shape[0] >= self.crop_h and image.shape[1] >= self.crop_w:
                 masks = np.stack([label, label],axis=2)
                 transformed = self.Random_Crop(image=image, mask=masks)
                 image = transformed['image']
@@ -260,7 +262,9 @@ class Dataset(torch.utils.data.Dataset):
         self.hgain = hyp["hgain"]
         self.sgain = hyp["sgain"]
         self.vgain = hyp["vgain"]
-        self.Random_Crop = A.RandomCrop(width=hyp["width_crop"], height=hyp["height_crop"])
+        self.crop_w = hyp["width_crop"]
+        self.crop_h = hyp["height_crop"]
+        self.Random_Crop = A.RandomCrop(width=self.crop_w, height=self.crop_h)
 
         self.prob_perspective = hyp["prob_perspective"]
         self.prob_flip = hyp["prob_flip"]
@@ -368,7 +372,7 @@ class Dataset(torch.utils.data.Dataset):
                 image = RandomBilateralBlur(image)
             if random.random() < self.prob_gaussian:
                 image = RandomGaussianBlur(image)
-            if random.random() < self.prob_crop:
+            if random.random() < self.prob_crop and image.shape[0] >= self.crop_h and image.shape[1] >= self.crop_w:
                 masks = np.stack([label1, label2],axis=2)
                 transformed = self.Random_Crop(image=image, mask=masks)
                 image = transformed['image']
