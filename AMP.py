@@ -153,10 +153,11 @@ class AMPDataset(torch.utils.data.Dataset):
         label1 = cv2.resize(label1, (W_, 360))
         label2 = cv2.resize(label2, (W_, 360))
         
-        _, seg_b1 = cv2.threshold(label1, 1, 255, cv2.THRESH_BINARY_INV)
-        _, seg_b2 = cv2.threshold(label2, 1, 255, cv2.THRESH_BINARY_INV)
-        _, seg1 = cv2.threshold(label1, 1, 255, cv2.THRESH_BINARY)
-        _, seg2 = cv2.threshold(label2, 1, 255, cv2.THRESH_BINARY)
+        # Use threshold 0 so both {0,1} and {0,255} masks are handled correctly.
+        _, seg_b1 = cv2.threshold(label1, 0, 255, cv2.THRESH_BINARY_INV)
+        _, seg_b2 = cv2.threshold(label2, 0, 255, cv2.THRESH_BINARY_INV)
+        _, seg1 = cv2.threshold(label1, 0, 255, cv2.THRESH_BINARY)
+        _, seg2 = cv2.threshold(label2, 0, 255, cv2.THRESH_BINARY)
 
         seg1 = self.Tensor(seg1)
         seg2 = self.Tensor(seg2)
