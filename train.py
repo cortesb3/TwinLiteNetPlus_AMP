@@ -6,9 +6,10 @@ import yaml
 import math
 from copy import deepcopy
 from argparse import ArgumentParser
+import torch.nn as nn
 
 from model.model import TwinLiteNetPlus
-from loss import TotalLoss
+from loss import SigleLoss
 from utils import train, val, netParams, save_checkpoint, poly_lr_scheduler
 from AMP import AMPDataset
 
@@ -31,6 +32,18 @@ class ModelEMA:
                 if v.dtype.is_floating_point:
                     v *= d
                     v += (1. - d) * msd[k].detach()
+
+
+class DAOnlyLoss(nn.Module):
+    """Compute loss only for the drivable-area head of TwinLiteNetPlus."""
+    def __init__(self, hyp):
+        super().__init__()
+        self.da_loss = SigleLoss(hyp, task="DA")
+
+    def forward(self, outputs, targets):
+        out_da = outputs[0]
+        target_da = targets[0]
+        return self.da_loss(out_da, target_da)
 
 def train_net(args, hyp):
     """Train the neural network model with given arguments and hyperparameters"""
@@ -59,7 +72,7 @@ def train_net(args, hyp):
     
     print(f'Total network parameters: {netParams(model)}')
     
-    criteria = TotalLoss(hyp)
+    criteria = DAOnlyLoss(hyp)
     start_epoch = 0
     lr = hyp['lr']
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr, betas=(hyp['momentum'], 0.999), eps=hyp['eps'], weight_decay=hyp['weight_decay'])
@@ -94,10 +107,9 @@ def train_net(args, hyp):
         ema = train(args, trainLoader, model, criteria, optimizer, epoch, scaler, args.verbose, ema if use_ema else None)
         
         model.eval()
-        da_segment_results, ll_segment_results = val(valLoader, ema.ema if use_ema else model, args=args)
+        da_segment_results, _ = val(valLoader, ema.ema if use_ema else model, args=args)
         
         print(f"Driving Area Segment: mIOU({da_segment_results[2]:.3f})")
-        print(f"Lane Line Segment: Acc({ll_segment_results[0]:.3f}) IOU({ll_segment_results[1]:.3f})")
         
         torch.save(ema.ema.state_dict(), model_file_name) if use_ema else torch.save(model.state_dict(), model_file_name)
         
