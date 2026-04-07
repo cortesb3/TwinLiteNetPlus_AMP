@@ -104,7 +104,7 @@ def validation_amp(args):
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument('--weight', type=str, default="pretrained/large.pth", help='Path to model weights')
+    parser.add_argument('--weight', type=str, default="runs/amp_train_large/model_99.pth", help='Path to model weights')
     parser.add_argument('--num_workers', type=int, default=4, help='Number of parallel threads')
     parser.add_argument('--batch_size', type=int, default=8, help='Batch size for validation')
     parser.add_argument('--config', type=str, choices=["nano", "small", "medium", "large"], default="large", help='Model configuration')
