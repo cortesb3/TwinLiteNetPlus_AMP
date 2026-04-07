@@ -1,0 +1,39 @@
+#!/usr/bin/bash
+#SBATCH --job-name=amp_demo
+#SBATCH --cpus-per-task=8
+#SBATCH --account=labi
+#SBATCH --partition=a10
+#SBATCH --time=02:00:00
+#SBATCH --gres=gpu:1
+#SBATCH --mem=16G
+#SBATCH --output=%x_%j.out
+#SBATCH --error=%x_%j.err
+
+set -euo pipefail
+
+# 1. Load modules
+module load cuda anaconda
+
+# Optional: suppress albumentations update check in batch logs
+export NO_ALBUMENTATIONS_UPDATE=1
+
+# 2. Activate conda environment
+# Conda deactivate hooks can reference unset vars; temporarily disable nounset.
+set +u
+conda activate /scratch/gilbreth/cortesb/amp/twinlite_env
+set -u
+
+# 3. Navigate to repository
+cd /scratch/gilbreth/cortesb/amp/TwinLiteNetPlus_AMP
+
+# 4. Run demo on AMP test split
+# demo.py resolves source from hyp -> dataset_path/images/test when --source is omitted.
+echo "Starting AMP demo on test split..."
+python demo.py \
+  --config large \
+  --weight pretrained/large.pth \
+  --hyp ./hyperparameters/twinlitev2_hyper.yaml \
+  --split test \
+  --save-dir /scratch/gilbreth/cortesb/amp/TwinLiteNetPlus_AMP/inference/output_test
+
+echo "AMP demo completed!"
