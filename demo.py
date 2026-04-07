@@ -17,6 +17,24 @@ import os
 import shutil
 
 
+def resolve_amp_source(args):
+    """Resolve source path from AMP hyperparameters when --source is not provided."""
+    if args.source is not None:
+        return args.source
+
+    with open(args.hyp, errors='ignore') as f:
+        hyp = yaml.safe_load(f)
+
+    dataset_root = hyp.get('dataset_path')
+    if not dataset_root:
+        raise ValueError(f"'dataset_path' not found in hyp file: {args.hyp}")
+
+    source = str(Path(dataset_root) / 'images' / args.split)
+    if not os.path.exists(source):
+        raise FileNotFoundError(f"Resolved AMP source does not exist: {source}")
+    return source
+
+
 def show_seg_result(img, result, index, epoch, save_dir=None, is_ll=False,palette=None):
     # img = mmcv.imread(img)
     # img = img.copy()
@@ -61,17 +79,20 @@ def detect(args):
     if half:
         model.half()  # to FP16
 
+    source = resolve_amp_source(args)
+    print(f"Running demo on source: {source}")
+
     # Set Dataloader
-    if args.source.isnumeric():
+    if source.isnumeric():
         cudnn.benchmark = True  # set True to speed up constant image size inference
-        dataset = LoadStreams(args.source, img_size=args.img_size)
+        dataset = LoadStreams(source, img_size=args.img_size)
         bs = len(dataset)  # batch_size
     else:
-        dataset = LoadImages(args.source, img_size=args.img_size)
+        dataset = LoadImages(source, img_size=args.img_size)
         bs = 1  # batch_size
-    if os.path.exists(opt.save_dir):  # output dir
-        shutil.rmtree(opt.save_dir)  # delete dir
-    os.makedirs(opt.save_dir)  # make new dir
+    if os.path.exists(args.save_dir):  # output dir
+        shutil.rmtree(args.save_dir)  # delete dir
+    os.makedirs(args.save_dir)  # make new dir
     # Run inference
     t0 = time.time()
 
@@ -100,7 +121,7 @@ def detect(args):
         da_seg_out,ll_seg_out= model(img)
         # t2 = time_synchronized()
 
-        save_path = str(opt.save_dir +'/'+ Path(path).name) if dataset.mode != 'stream' else str(opt.save_dir + '/' + "web.mp4")
+        save_path = str(args.save_dir +'/'+ Path(path).name) if dataset.mode != 'stream' else str(args.save_dir + '/' + "web.mp4")
         
 
         da_predict = da_seg_out[:, :, pad_h:(height-pad_h),pad_w:(width-pad_w)]
@@ -140,10 +161,12 @@ def detect(args):
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('--weight', type=str, default='pretrained/large.pth', help='model.pth path(s)')
-    parser.add_argument('--source', type=str, default='inference/videos', help='source')  # file/folder   ex:inference/images
+    parser.add_argument('--source', type=str, default=None, help='source path override (default resolves to AMP dataset split)')
     parser.add_argument('--img-size', type=int, default=640, help='inference size (pixels)')
     parser.add_argument('--config', type=str, choices=["nano", "small", "medium", "large"], help='Model configuration')
     parser.add_argument('--save-dir', type=str, default='inference/output', help='directory to save results')
+    parser.add_argument('--hyp', type=str, default='./hyperparameters/twinlitev2_hyper.yaml', help='Path to AMP hyperparameters YAML file')
+    parser.add_argument('--split', type=str, choices=['train', 'val', 'test'], default='test', help='AMP dataset split used when --source is not set')
     opt = parser.parse_args()
     with torch.no_grad():
         detect(opt)
