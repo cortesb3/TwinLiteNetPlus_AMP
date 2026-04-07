@@ -160,7 +160,7 @@ def detect(args):
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument('--weight', type=str, default='pretrained/large.pth', help='model.pth path(s)')
+    parser.add_argument('--weight', type=str, default='runs/amp_train_large/model_99.pth', help='model.pth path(s)')
     parser.add_argument('--source', type=str, default=None, help='source path override (default resolves to AMP dataset split)')
     parser.add_argument('--img-size', type=int, default=640, help='inference size (pixels)')
     parser.add_argument('--config', type=str, choices=["nano", "small", "medium", "large"], help='Model configuration')
