@@ -28,10 +28,10 @@ cd /scratch/gilbreth/cortesb/amp/TwinLiteNetPlus_AMP
 
 # 4. Run validation script
 echo "Starting Evaluation on Val Set..."
-python val_amp.py --weight pretrained/large.pth --config large --split val
+python val_amp.py --weight runs/amp_train_large/model_99.pth --config large --split val
 
 # 5. Also test on test set for comparison
 echo "Starting Evaluation on Test Set..."
-python val_amp.py --weight pretrained/large.pth --config large --split test
+python val_amp.py --weight runs/amp_train_large/model_99.pth --config large --split test
 
 echo "Evaluation completed!"

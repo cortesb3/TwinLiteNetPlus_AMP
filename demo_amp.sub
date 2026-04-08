@@ -31,7 +31,7 @@ cd /scratch/gilbreth/cortesb/amp/TwinLiteNetPlus_AMP
 echo "Starting AMP demo on test split..."
 python demo.py \
   --config large \
-  --weight pretrained/large.pth \
+  --weight runs/amp_train_large/model_99.pth \
   --hyp ./hyperparameters/twinlitev2_hyper.yaml \
   --split test \
   --save-dir /scratch/gilbreth/cortesb/amp/TwinLiteNetPlus_AMP/inference/output_test
